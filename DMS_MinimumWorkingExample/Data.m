@@ -1,8 +1,10 @@
 classdef Data
     % Data Utility class for loading the preliminary DMS data
     properties (Constant)
-        % Path to MATLAB files containing the data for each class
+        % Paths to MATLAB files containing the data for each class
         stdPath = "Trials_Preprocessed\"
+        chanlocsFilePath = "chanlocsXY.mat"
+        outlineFilePath = "outline.mat"
         
         % names of the MATLAB files
         Object = "obj"
@@ -82,6 +84,25 @@ classdef Data
                 [coeff, score, latent] = pca(data(:, :, t), 'NumComponents', nComponents);
                 transformed(:, :, t) = score;
             end
+        end
+        
+        function averagedTrials = averageTrialsWithoutOverlap(data, windowSize)
+            averagedTrials = [];
+            for i=1:windowSize:size(data, 1)
+                averagedTrials = cat(1, averagedTrials, mean(data(i:i+windowSize-1, :, :), 1));
+            end
+        end
+        
+        function chanlocs = getChannelLocations()
+            chanlocs = load(strcat(Data.stdPath, Data.chanlocsFilePath));
+            fields = fieldnames(chanlocs);
+            chanlocs = chanlocs.(fields{1});
+        end
+        
+        function outline = getTopographyOutline()
+            outline = load(strcat(Data.stdPath, Data.outlineFilePath));
+            fields = fieldnames(outline);
+            outline = outline.(fields{1});
         end
     end
 end
