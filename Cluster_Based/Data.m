@@ -3,6 +3,12 @@ classdef Data
         stdPath = "../../Daten/EpochierteDaten";
         frequencies = ["theta", "Alpha", "low_Beta", "high_Beta", "low_Gamma", "high_Gamma"];
         subjectNames = ["014AJ", "015SB"];
+        
+        clusterBasedStructsPath = 'Data/ft_structs/'
+        betweenSubjectsHitsFilename = 'ft_struct_hits_between_subjects.mat';
+        betweenSubjectsMissesFilename = 'ft_struct_misses_between_subjects.mat';
+        betweenTrialsHitsFilename = 'ft_struct_hits.mat';
+        betweenTrialsMissesFilename = 'ft_struct_misses.mat';
     end
     
     methods (Static)
@@ -55,21 +61,38 @@ classdef Data
             data = data.(fields{1});
         end    
         
-        function [hits, misses] = getMegaData()
+        function [hits, misses] = getMegaData(avgTrials)
             directory = dir('Data');
             hits = [];
             misses = [];
-            for f=1:4
+            for f=1:length(directory)
                 file = directory(f);
+                
                 if contains(file.name, 'HIT')
                     data = Data.loadFromFile(file.folder, file.name);
+                    if avgTrials
+                        data = mean(data, 3);
+                    end
                     hits = cat(3, hits, data);
                 end
                 if contains(file.name, 'MIS')
                     data = Data.loadFromFile(file.folder, file.name);
+                    if avgTrials
+                        data = mean(data, 3);
+                    end
                     misses = cat(3, misses, data);
                 end
             end
+        end
+        
+        function [hits, misses] = getBetweenSamplesDemoStructures()
+            hits = Data.loadFromFile(Data.clusterBasedStructsPath, Data.betweenSubjectsHitsFilename);
+            misses = Data.loadFromFile(Data.clusterBasedStructsPath, Data.betweenSubjectsMissesFilename);
+        end
+        
+        function [hits, misses] = getBetweenTrialsDemoStructures()
+            hits = Data.loadFromFile(Data.clusterBasedStructsPath, Data.betweenTrialsHitsFilename);
+            misses = Data.loadFromFile(Data.clusterBasedStructsPath, Data.betweenTrialsMissesFilename);
         end
         
     end
