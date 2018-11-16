@@ -1,9 +1,15 @@
-[data_hits, data_misses] = Data.getBetweenSamplesDemoStructures();
-% [hits, misses] = Data.getBetweenTrialsDemoStructures();
-
+clear
 cfg = [];
-cfg.method           = 'montecarlo';
+
+[data_hits, data_misses] = Data.getWithinSubjectsDemoStructures();
 cfg.statistic        = 'ft_statfun_depsamplesT';
+cfg = Design.addWithinSubjectsDesign(cfg, 2);
+
+% [data_hits, data_misses] = Data.getBetweenTrialsDemoStructures();
+% cfg.statistic        = 'ft_statfun_indepsamplesT';
+% cfg = Design.addBetweenTrialsDesign(cfg, data_hits, data_misses);
+
+cfg.method           = 'montecarlo';
 cfg.correctm         = 'cluster';
 cfg.clusteralpha     = 0.5;
 cfg.clusterstatistic = 'maxsum';
@@ -16,35 +22,6 @@ cfg.numrandomization = 500;
 cfg_neighb.method    = 'distance';
 cfg.neighbours       = ft_prepare_neighbours(cfg_neighb, data_hits);
 cfg.keeptrials = 'yes';
-
-% between subjects paradigm
-subj = 2;
-design = zeros(2,2*subj);
-for i = 1:subj
-  design(1,i) = i;
-end
-for i = 1:subj
-  design(1,subj+i) = i;
-end
-design(2,1:subj)        = 1;
-design(2,subj+1:2*subj) = 2;
-
-cfg.design   = design;
-cfg.uvar     = 1;
-cfg.ivar     = 2;
-
-% % between trials paradigm
-% nHits = size(data_hits.powspctrm, 1);
-% nMisses = size(data_misses.powspctrm, 1);
-% design = zeros(1, nHits + nMisses);
-% design(1, 1:nHits) = 1;
-% design(1, nHits+1:nHits+nMisses) = 2;
-% 
-% cfg.design = design';
-% cfg.ivar = 1;
-% 
-% data_hits.cfg = cfg;
-% data_misses.cfg = cfg;
 
 % compute clusters
 [stat] = ft_freqstatistics(cfg, data_hits, data_misses)

@@ -5,10 +5,10 @@ classdef Data
         subjectNames = ["014AJ", "015SB"];
         
         clusterBasedStructsPath = 'Data/ft_structs/'
-        betweenSubjectsHitsFilename = 'ft_struct_hits_between_subjects.mat';
-        betweenSubjectsMissesFilename = 'ft_struct_misses_between_subjects.mat';
-        betweenTrialsHitsFilename = 'ft_struct_hits.mat';
-        betweenTrialsMissesFilename = 'ft_struct_misses.mat';
+        betweenSubjectsHitsFilename = 'ft_struct_hits_within_subjects.mat';
+        betweenSubjectsMissesFilename = 'ft_struct_misses_within_subjects.mat';
+        betweenTrialsHitsFilename = 'ft_struct_hits_between_trials.mat';
+        betweenTrialsMissesFilename = 'ft_struct_misses_between_trials.mat';
     end
     
     methods (Static)
@@ -65,7 +65,7 @@ classdef Data
             directory = dir('Data');
             hits = [];
             misses = [];
-            for f=1:length(directory)
+            for f=1:8
                 file = directory(f);
                 
                 if contains(file.name, 'HIT')
@@ -85,12 +85,16 @@ classdef Data
             end
         end
         
-        function [hits, misses] = getBetweenSamplesDemoStructures()
+        function [hits, misses] = getWithinSubjectsDemoStructures()
+            % load structs containing demo data of 2 subjects whose trials
+            % have been averaged with six frequencies
             hits = Data.loadFromFile(Data.clusterBasedStructsPath, Data.betweenSubjectsHitsFilename);
             misses = Data.loadFromFile(Data.clusterBasedStructsPath, Data.betweenSubjectsMissesFilename);
         end
         
         function [hits, misses] = getBetweenTrialsDemoStructures()
+            % load structs containing demo data 57 subjects whose trials
+            % have been averaged for theta
             hits = Data.loadFromFile(Data.clusterBasedStructsPath, Data.betweenTrialsHitsFilename);
             misses = Data.loadFromFile(Data.clusterBasedStructsPath, Data.betweenTrialsMissesFilename);
         end
