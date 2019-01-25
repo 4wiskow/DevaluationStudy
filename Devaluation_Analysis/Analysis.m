@@ -1,9 +1,9 @@
 clear
-data = Data.getData('sampleObject', 'sampleScene');
+data = Data.getData('d1', 'd2');
 
 % training input: delay or sample representation epochs of each trial
-trainingClassA = data.sampleObject;
-trainingClassB = data.sampleScene;
+trainingClassA = cat(1, data.d1.sampleObject, data.d2.sampleObject);
+trainingClassB = cat(1, data.d1.sampleScene, data.d2.sampleScene);
 % use only trials which were correctly matched
 trainingClassA = trainingClassA(Data.getIndicesOfCorrectlyMatched(Data.object));
 trainingClassB = trainingClassB(Data.getIndicesOfCorrectlyMatched(Data.scene));
