@@ -96,7 +96,7 @@ classdef Data
             end
         end
         
-        function result = getStimuliEpochsForObjectAndScene(classes)
+        function result = getStimuliEpochsForClasses(classes)
             if ~intersect(classes, [Data.object, Data.scene, Data.alienBlue, Data.alienRed])
                 error('classes must contain one of the class strings in the properties of Data');
             end
@@ -122,30 +122,6 @@ classdef Data
                 result.alienRed = stimuli{3-aliensAssignment};
             end
         end
-       
-        function [blue, red] = getTrialsByAlien()
-            [~, ~, raw] = xlsread([Data.RelResultsPath 'pia_2019-01-16_13-06-27_result']);
-            relTrialIdentifiers = [1 3 4];
-            raw = raw(2:end, :);
-            alienBlueCorrectIndices = [];
-            alienRedCorrectIndices = [];
-            alienBlueCounter = 1;
-            alienRedCounter = 1;
-            for i=1:size(raw, 1)
-                if raw{i, 12} == 1 % response was alienBlue
-                    alienBlueCounter = alienBlueCounter + 1;
-                    if ismember(raw{i, 11}, relTrialIdentifiers) == 1 && raw{i, 14} == 1 % not a consumption trial and correct response
-                        alienBlueCorrectIndices = [alienBlueCorrectIndices alienBlueCounter];
-                    end
-                end
-                if raw{i, 12} == 2 % response was alienRed
-                    alienRedCounter = alienRedCounter + 1;
-                    if ismember(raw{i, 11}, relTrialIdentifiers) == 1 && raw{i, 14} == 1 % correct response
-                        alienRedCorrectIndices = [alienRedCorrectIndices alienRedCounter];
-                    end
-                end
-            end
-                    
-        end    
+              
     end
 end

@@ -18,12 +18,13 @@ Y = Data.generateLabels(trainingClassA, trainingClassB);
 classifier = Classification.fit(X, Y, 'svm_obj_sce');
 
 disp('SVM performance on training data:');
-Classification.checkPerformance(classifier, X, Y);
+perf = Classification.checkPerformance(classifier, X, Y);
+disp(perf);
 
 
 % testing input: reinforcementTask trials; fractal presentation or
 % questionAliens
-testingData = Data.getStimuliEpochsForObjectAndScene(['object', 'scene']);
+testingData = Data.getStimuliEpochsForClasses(['object', 'scene']);
 testingClassA = testingData.object;
 testingClassA = Data.averageTrialsWithoutOverlap(testingClassA, 2);
 testingClassALabel = 1;
