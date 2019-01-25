@@ -12,11 +12,12 @@ classdef Data
     end
     
     methods (Static)
-        function data = getData()
+        function data = getData(varargin)
             if ~isfile('data.mat')
                 EEGtoMatlab;
             end
-            data = load('data');
+            data = load('data', varargin{1:end});
+            
         end
         
         function averagedTrials = averageTrialsWithoutOverlap(data, windowSize)
@@ -33,18 +34,22 @@ classdef Data
             input = zscore(input);
         end
         
-        function labels = generateLabels(classA, classB)
+        function labels = generateChosenLabels(classA, classALabel, classB, classBLabel)
             labels = cat(1, ...
-            ones(size(classA, 1), 1), ...
-            ones(size(classB, 1), 1) + 1 ...
+            repmat(classALabel, size(classA, 1), 1), ...
+            repmat(classBLabel, size(classB, 1), 1) ...
             );
         end
         
+        function labels = generateLabels(classA, classB)
+            labels = Data.generateChosenLabels(classA, 1, classB, 2);
+        end
+        
         function [shuffledInput, shuffledLabels] = shuffleInputAndLabels(input, labels)
-            if length(input) ~= length(labels)
+            if size(input, 1) ~= size(labels, 1)
                 error("Input and Labels must be of same length");
             end
-            shuffleIndices = randperm(length(labels));
+            shuffleIndices = randperm(size(labels, 1));
             shuffledInput = input(shuffleIndices);
             shuffledLabels = labels(shuffleIndices);
         end
@@ -57,7 +62,7 @@ classdef Data
             
             indicesForClass = [];
             responseImageLabels = raw(2:end, 6);
-            for i=1:length(raw)-1
+            for i=1:size(raw, 1)-1
                 if strcmp(responseImageLabels{i}, classStr)
                     indicesForClass = [indicesForClass; i];
                 end
@@ -90,5 +95,57 @@ classdef Data
                     error('Outcome could not be matched with Object and Scene');
             end
         end
+        
+        function result = getStimuliEpochsForObjectAndScene(classes)
+            if ~intersect(classes, [Data.object, Data.scene, Data.alienBlue, Data.alienRed])
+                error('classes must contain one of the class strings in the properties of Data');
+            end
+            [~, ~, raw] = xlsread([Data.RelResultsPath 'pia_2019-01-16_13-06-27_result']);
+            outcomeAssignment = raw{2, 9};
+            aliensAssignment = raw{2, 7};
+            
+            data = Data.getData('sHigh', 'sLow');
+            stimuli = {data.sHigh, data.sLow};
+            
+            % sHigh is invariably connected to oHigh
+            % assignments: 1: object is oHigh, 2: scene is oHigh
+            if ismember(Data.object, classes) 
+                result.object = stimuli{outcomeAssignment};
+            end
+            if ismember(Data.scene, classes) 
+                result.scene = stimuli{3-outcomeAssignment};
+            end
+            if ismember(Data.alienBlue, classes) 
+                result.alienBlue = stimuli{aliensAssignment};
+            end
+            if ismember(Data.alienRed, classes) 
+                result.alienRed = stimuli{3-aliensAssignment};
+            end
+        end
+       
+        function [blue, red] = getTrialsByAlien()
+            [~, ~, raw] = xlsread([Data.RelResultsPath 'pia_2019-01-16_13-06-27_result']);
+            relTrialIdentifiers = [1 3 4];
+            raw = raw(2:end, :);
+            alienBlueCorrectIndices = [];
+            alienRedCorrectIndices = [];
+            alienBlueCounter = 1;
+            alienRedCounter = 1;
+            for i=1:size(raw, 1)
+                if raw{i, 12} == 1 % response was alienBlue
+                    alienBlueCounter = alienBlueCounter + 1;
+                    if ismember(raw{i, 11}, relTrialIdentifiers) == 1 && raw{i, 14} == 1 % not a consumption trial and correct response
+                        alienBlueCorrectIndices = [alienBlueCorrectIndices alienBlueCounter];
+                    end
+                end
+                if raw{i, 12} == 2 % response was alienRed
+                    alienRedCounter = alienRedCounter + 1;
+                    if ismember(raw{i, 11}, relTrialIdentifiers) == 1 && raw{i, 14} == 1 % correct response
+                        alienRedCorrectIndices = [alienRedCorrectIndices alienRedCounter];
+                    end
+                end
+            end
+                    
+        end    
     end
 end

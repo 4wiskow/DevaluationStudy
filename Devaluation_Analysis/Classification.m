@@ -13,14 +13,23 @@ classdef Classification
             svm = train_svm(param, X, Y);
             save(savename, 'svm');
         end
-
-        function checkPerformance(svm, input, trueLabels)
+        
+        function perf = checkPerformanceAcrossTime(svm, input, trueLabels, trialsPerTest)
+            perf= [];
+            for i=1 : trialsPerTest : length(input)-trialsPerTest
+                perf = [perf Classification.checkPerformance(svm, ...
+                    input(i:i+trialsPerTest, :), trueLabels(i:i+trialsPerTest, :))];
+            end
+            disp(perf);
+        end
+                
+        function perf = checkPerformance(svm, input, trueLabels)
             % PREDICT predict class labels of shuffled samples of classA
             % and classB with given classifier
             
             [predictedLabels, ~] = test_svm(svm, input);
             [perf, ~] = mv_calculate_performance('acc', 'clabel', predictedLabels, trueLabels);
-            disp(perf);
+%             disp(perf);
         end
     end
 end

@@ -1,5 +1,5 @@
 clear
-data = Data.getData();
+data = Data.getData('sampleObject', 'sampleScene');
 
 % training input: delay or sample representation epochs of each trial
 trainingClassA = data.sampleObject;
@@ -23,21 +23,21 @@ Classification.checkPerformance(classifier, X, Y);
 
 % testing input: reinforcementTask trials; fractal presentation or
 % questionAliens
-[alien, oHigh] = Data.getAlienAndOutcomeAssignedToSHigh();
-% sHigh is linked to oHigh. Assignment of classes to A or B decides labels.
-% To keep 'object' with same label as in training, we need to keep trials
-% linked with 'object' assigned to A.
-if strcmp(oHigh, 'object')
-    testingClassA = data.sHigh;
-    testingClassB = data.sLow;
-else
-    testingClassA = data.sLow;
-    testingClassB = data.sHigh;
-end
+testingData = Data.getStimuliEpochsForObjectAndScene(['object', 'scene']);
+testingClassA = testingData.object;
+testingClassA = Data.averageTrialsWithoutOverlap(testingClassA, 2);
+testingClassALabel = 1;
+testingClassB = testingData.scene;
+testingClassB = Data.averageTrialsWithoutOverlap(testingClassB, 2);
+testingClassBLabel = 2;
 
 % test performance on reinforcementTask trials
 disp('SVM performance on testing data:');
 XTest = Data.generateInput(testingClassA, testingClassB);
-YTest = Data.generateLabels(testingClassA, testingClassB);
+YTest = Data.generateChosenLabels(testingClassA, testingClassALabel, testingClassB, testingClassBLabel);
 [XTest, YTest] = Data.shuffleInputAndLabels(XTest, YTest);
-Classification.checkPerformance(classifier, XTest, YTest);
+nTrials = 5;
+perf = Classification.checkPerformanceAcrossTime(classifier, XTest, YTest, nTrials);
+plot(linspace(1, size(XTest, 1), size(XTest, 1)/nTrials), perf);
+
+
