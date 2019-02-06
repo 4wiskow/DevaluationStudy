@@ -12,11 +12,12 @@ classdef Data
     end
     
     methods (Static)
-        function data = getData(varargin)
-            if ~isfile('data.mat')
-                EEGtoMatlab;
+        function data = getData(directory, subjectId, varargin)
+            dataFilename = ['data_' subjectId '.mat'];
+            if ~isfile(dataFilename)
+                EEGtoMatlab.getDataFromEpochs(directory, subjectId, dataFilename);
             end
-            data = load('data', varargin{1:end});
+            data = load(dataFilename, varargin{1:end});
             
         end
         
@@ -30,7 +31,7 @@ classdef Data
         function input = generateInput(classA, classB)
             input = cat(1, classA, classB);
             input = mean(input, 3);
-            input = mean(input, 2);
+%             input = mean(input, 2); % average across electrodes
             input = zscore(input);
         end
         
@@ -50,7 +51,7 @@ classdef Data
                 error("Input and Labels must be of same length");
             end
             shuffleIndices = randperm(size(labels, 1));
-            shuffledInput = input(shuffleIndices);
+            shuffledInput = input(shuffleIndices, :);
             shuffledLabels = labels(shuffleIndices);
         end
         
@@ -74,37 +75,15 @@ classdef Data
             indicesCorrectlyMatched = indicesForClass(correctnessIndicators == 1);
         end
         
-        function [alien, oHigh] = getAlienAndOutcomeAssignedToSHigh()
-            [~, ~, raw] = xlsread([Data.RelResultsPath 'pia_2019-01-16_13-06-27_result']);
-            alienNum = raw{2, 7};
-            switch alienNum
-                case 1
-                    alien = 'blue';
-                case 2 
-                    alien = 'red';
-                otherwise
-                    error('Response could not be matched with Blue and Red');
-            end
-            
-            switch raw{2, 9}
-                case 1
-                    oHigh = 'object';
-                case 2
-                    oHigh = 'scene';
-                otherwise
-                    error('Outcome could not be matched with Object and Scene');
-            end
-        end
-        
-        function result = getStimuliEpochsForClasses(classes)
+        function result = getFraktalEpochsForClasses(data, subjectId, classes, relResultsPath)
             if ~intersect(classes, [Data.object, Data.scene, Data.alienBlue, Data.alienRed])
                 error('classes must contain one of the class strings in the properties of Data');
             end
-            [~, ~, raw] = xlsread([Data.RelResultsPath 'pia_2019-01-16_13-06-27_result']);
+            [~, ~, raw] = xlsread(relResultsPath);
             outcomeAssignment = raw{2, 9};
             aliensAssignment = raw{2, 7};
             
-            data = Data.getData('sHigh', 'sLow');
+%             data = Data.getData(directory, subjectId, 'sHigh', 'sLow');
             stimuli = {data.sHigh, data.sLow};
             
             % sHigh is invariably connected to oHigh
@@ -120,6 +99,26 @@ classdef Data
             end
             if ismember(Data.alienRed, classes) 
                 result.alienRed = stimuli{3-aliensAssignment};
+            end
+        end
+        
+        function result = getQuestionAliensEpochsForClasses(data, subjectId, classes, relResultsPath)
+            if ~intersect(classes, [Data.object, Data.scene, Data.alienBlue, Data.alienRed])
+                error('classes must contain one of the class strings in the properties of Data');
+            end
+            [~, ~, raw] = xlsread(relResultsPath);
+            outcomeAssignment = raw{2, 9};
+            
+%             data = Data.getData(directory, subjectId, 'questionAliensSHigh', 'questionAliensSLow');
+            stimuli = {data.questionAliensSHigh, data.questionAliensSLow};
+            
+            % sHigh is invariably connected to oHigh
+            % assignments: 1: object is oHigh, 2: scene is oHigh
+            if ismember(Data.object, classes) 
+                result.object = stimuli{outcomeAssignment};
+            end
+            if ismember(Data.scene, classes) 
+                result.scene = stimuli{3-outcomeAssignment};
             end
         end
               

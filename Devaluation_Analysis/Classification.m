@@ -16,9 +16,14 @@ classdef Classification
         
         function perf = checkPerformanceAcrossTime(svm, input, trueLabels, trialsPerTest)
             perf= [];
-            for i=1 : trialsPerTest : length(input)-trialsPerTest
+            nTrials = size(input, 1);
+            for windowStart = 1 : trialsPerTest : nTrials
+                windowEnd = windowStart + trialsPerTest - 1;
+                if windowEnd > nTrials 
+                    windowEnd = nTrials;
+                end
                 perf = [perf Classification.checkPerformance(svm, ...
-                    input(i:i+trialsPerTest, :), trueLabels(i:i+trialsPerTest, :))];
+                    input(windowStart:windowEnd, :), trueLabels(windowStart:windowEnd, :))];
             end
             disp(perf);
         end
@@ -29,7 +34,6 @@ classdef Classification
             
             [predictedLabels, ~] = test_svm(svm, input);
             [perf, ~] = mv_calculate_performance('acc', 'clabel', predictedLabels, trueLabels);
-%             disp(perf);
         end
     end
 end
