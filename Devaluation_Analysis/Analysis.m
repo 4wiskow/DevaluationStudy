@@ -62,12 +62,12 @@ classdef Analysis
             trainingClassB = Data.averageTrialsWithoutOverlap(trainingClassB, 2);
 
             % fit model to training data
-            X = Data.generateInput(trainingClassA, trainingClassB);
+            X = Data.generateInput(trainingClassA, trainingClassB, 1);
             Y = Data.generateLabels(trainingClassA, trainingClassB);
             [X, Y] = Data.shuffleInputAndLabels(X, Y);
-            classifier = Classification.fit(X, Y, savename);
+            classifier = Classification.classifyAcrossTime(X, Y);
 
-            perf = Classification.checkPerformance(classifier, X, Y);
+%             perf = Classification.checkPerformance(classifier, X, Y);
             fprintf("SVM performance on training data for %s:", savename);
             disp(perf);
         end
@@ -83,7 +83,7 @@ classdef Analysis
                 classA = Data.averageTrialsWithoutOverlap(classA, 2);
                 classB = Data.averageTrialsWithoutOverlap(classB, 2);
                 
-                XTest = Data.generateInput(classA, classB);
+                XTest = Data.generateInput(classA, classB, 0);
                 YTest = Data.generateChosenLabels(classA, 1, classB, 2);
                 perf = Classification.checkPerformance(classifier, XTest, YTest);
                 performances = [performances perf];

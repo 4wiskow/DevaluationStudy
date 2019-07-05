@@ -15,6 +15,7 @@ classdef Data
         allBlocks = "Dev"; % all block fields contain 'Dev'
         
         nBlocksExpected = 10;
+        sampleRate = 2048;
     end
     
     methods (Static)
@@ -36,11 +37,43 @@ classdef Data
             end
         end
         
-        function input = generateInput(classA, classB)
+        function finalInput = generateInput(classA, classB, doRunningAverage)
             % GENERATEINPUT generate input to fit a classifier to.
             input = cat(1, classA, classB);
-            input = mean(input, 3); % average across time
-            input = zscore(input); % faster convergence during training
+           
+            if doRunningAverage
+                stepSize = ceil(0.01 * Data.sampleRate); % 10ms
+                samplesPerWindow = ceil(0.1 * Data.sampleRate); % "100ms of samples around current sample"
+                averaged = zeros(size(input, 1), size(input, 2), ceil(size(input, 3)/stepSize)); % preallocation
+                for sampleIdx = 1:size(input, 1)
+                    sample = squeeze(input(sampleIdx, :, :));
+                    for channelIdx = 1:size(sample, 1)
+                        %averaged(channelIdx, :) = conv(sample(channelIdx,:), ones(1, samplesPerWindow)./samplesPerWindow, 'same');
+                        averaged(sampleIdx, channelIdx, :) = Data.smoothdataWithSteps(sample(channelIdx, :), samplesPerWindow, stepSize);
+                    end
+                end
+            else
+                averaged = mean(input, 3); % average across time
+            end
+            finalInput = zscore(averaged); % faster convergence during training
+        end
+        
+        function smoothed = smoothdataWithSteps(data, windowSize, stepSize)
+            % SMOOTHDATAWITHSTEPS computes a moving average across a 
+            % 1D-vector data where the
+            % window is moved stepSize steps between operations. Starting 
+            % with the first element, the window is centered around the 
+            % current element to calculate the average and then moved
+            % stepSize elements ahead.
+            dataSize = length(data);
+            
+            smoothed = [];
+            for pivotElement = 1:stepSize:dataSize
+                windowStart = max(pivotElement - floor(windowSize/2), 1);
+                windowEnd = min(pivotElement + floor(windowSize/2) -1, length(data));
+                
+                smoothed = [smoothed, mean(data(windowStart:windowEnd))];
+            end
         end
         
         function labels = generateChosenLabels(classA, classALabel, classB, classBLabel)
@@ -66,7 +99,13 @@ classdef Data
                 error("Input and Labels must be of same length");
             end
             shuffleIndices = randperm(size(labels, 1));
-            shuffledInput = input(shuffleIndices, :);
+            
+            originalShape = size(input); % remember original shape
+            shuffledInput = input(shuffleIndices, :); % flattens matrices of dimensions > 2
+            if ~isequal(size(shuffledInput), originalShape) % reshape into original shape if shuffling flattened the input
+                shuffledInput = reshape(shuffledInput, originalShape);
+            end
+            
             shuffledLabels = labels(shuffleIndices);
         end
         

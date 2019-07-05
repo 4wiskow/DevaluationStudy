@@ -14,6 +14,20 @@ classdef Classification
             save(savename, 'svm');
         end
         
+        function [perf, res] = classifyAcrossTime(X, Y)
+            % CLASSIFYACROSSTIME fit SVM classifier to training data for
+            % each time point and return performance
+                        
+            % get standard parameters
+            param = mv_get_classifier_param('svm');
+            % has to be set again, otherwise standard lda is used!
+            param.classifier = 'svm';
+            param.kernel = 'rbf';
+            param.balance = 'oversample';
+ 
+            [perf, res] = mv_classify_across_time(param, X, Y);
+        end
+        
         function perf = checkPerformanceAcrossTime(svm, input, trueLabels, trialsPerTest)
             perf= [];
             nTrials = size(input, 1);
