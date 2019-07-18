@@ -24,6 +24,8 @@ classdef Classification
             param.classifier = 'svm';
             param.kernel = 'rbf';
             param.balance = 'oversample';
+            param.k = 5;
+            param.repeat = 1;
  
             [perf, res] = mv_classify_across_time(param, X, Y);
         end

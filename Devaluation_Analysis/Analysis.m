@@ -55,6 +55,26 @@ classdef Analysis
             % TRAINFORCLASSES train a SVM classifier for two classes of
             % trials and save it. Two adjacent trials are averaged to increase
             % signal-to-noise ratio.
+            [X, Y] = Analysis.prepareDMSTrainingData(data, classAFieldname, classBFieldname);
+            
+           classifier = Classification.fit(X, Y, savename);
+            perf = Classification.checkPerformance(classifier, X, Y);
+            fprintf("SVM performance on training data for %s: \n", savename);
+            disp(perf);
+        end
+        
+        function perf = trainForClassesAcrossTime(data, classAFieldname, classBFieldname, savename)
+            % TRAINFORCLASSES train a SVM classifier for two classes of
+            % trials and save it. Two adjacent trials are averaged to increase
+            % signal-to-noise ratio.
+            [X, Y] = Analysis.prepareDMSTrainingData(data, classAFieldname, classBFieldname);
+            
+            [perf, ~] = Classification.classifyAcrossTime(X, Y);
+            mv_plot_1D(linspace(1, length(perf), length(perf)), perf);
+            save([savename '_performanceAcrossTime'], 'perf');
+        end 
+        
+        function [X, Y] = prepareDMSTrainingData(data, classAFieldname, classBFieldname)
             trainingClassA = cat(1, data.d1.(classAFieldname), data.d2.(classAFieldname));
             trainingClassB = cat(1, data.d1.(classBFieldname), data.d2.(classBFieldname));
       
@@ -65,11 +85,6 @@ classdef Analysis
             X = Data.generateInput(trainingClassA, trainingClassB, 1);
             Y = Data.generateLabels(trainingClassA, trainingClassB);
             [X, Y] = Data.shuffleInputAndLabels(X, Y);
-            classifier = Classification.classifyAcrossTime(X, Y);
-
-%             perf = Classification.checkPerformance(classifier, X, Y);
-            fprintf("SVM performance on training data for %s:", savename);
-            disp(perf);
         end
 
         function performances = testAcrossBlocks(classifier, data, classes)

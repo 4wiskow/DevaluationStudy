@@ -23,7 +23,7 @@ classdef Data
             % DATA constructor
             dataFilename = ['data_' subjectId '.mat'];
             if ~isfile(dataFilename)
-                EEGtoMatlab.getDataFromEpochs(directory, subjectId, dataFilename);
+                EEGtoMatlab.getDataFromEpochs(directory, subjectId, dataFilename, [-0.2 0], 1);
             end
             obj.data = load(dataFilename, varargin{1:end});
             
@@ -42,6 +42,7 @@ classdef Data
             input = cat(1, classA, classB);
            
             if doRunningAverage
+                fprintf('Using running average of trials across time')
                 stepSize = ceil(0.01 * Data.sampleRate); % 10ms
                 samplesPerWindow = ceil(0.1 * Data.sampleRate); % "100ms of samples around current sample"
                 averaged = zeros(size(input, 1), size(input, 2), ceil(size(input, 3)/stepSize)); % preallocation
@@ -53,6 +54,7 @@ classdef Data
                     end
                 end
             else
+                fprintf('Averaging time dimension')
                 averaged = mean(input, 3); % average across time
             end
             finalInput = zscore(averaged); % faster convergence during training

@@ -26,7 +26,7 @@
 
 
 clear
-baseDirectory = 'C:\Users\maria\Documents\Praktikum\DevaluationStudy\2_Daten_29-01-19\'; % adapt to your directory
+baseDirectory = 'C:\Users\maria\Documents\Praktikum\DevaluationStudy\Devaluation_12-0719\'; % adapt to your directory
 % look for folders for each subject
 subjectFolders = dir(baseDirectory);
 subjectFolders=subjectFolders(~ismember({subjectFolders.name},{'.','..'})); % remove super-folders
